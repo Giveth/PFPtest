@@ -3,22 +3,22 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract GiversPFP is ERC721Enumerable, Ownable {
-    using Strings for uint256;
+contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
 
+    using Strings for uint256;
     string baseURI;
     string public baseExtension = ".json";
     uint256 public price;
     uint256 public maxSupply = 1000;
     uint256 public maxMintAmount = 5;
-    bool public paused = false;
     bool public revealed = false;
     bool public allowListOnly = true;
     string public notRevealedUri;
     IERC20 public paymentToken;
-    mapping(address => bool) public onAllowList;
+    mapping(address => bool) public allowList;
 
     constructor(
         string memory _name,
@@ -40,9 +40,8 @@ contract GiversPFP is ERC721Enumerable, Ownable {
     }
 
     // public
-    function mint(uint256 _mintAmount) public {
+    function mint(uint256 _mintAmount) public whenNotPaused {
         uint256 supply = totalSupply();
-        require(!paused);
         require(_mintAmount > 0);
         require(_mintAmount <= maxMintAmount);
         require(supply + _mintAmount <= maxSupply);
@@ -51,7 +50,7 @@ contract GiversPFP is ERC721Enumerable, Ownable {
         if (msg.sender != owner() && !allowListOnly) {
             paymentToken.transferFrom(msg.sender, address(this), price * _mintAmount);
         } else if ((msg.sender != owner() && allowListOnly)) {
-            require(onAllowList[msg.sender] == true, "you are not on the allow list!");
+            require(allowList[msg.sender], "you are not on the allow list!");
             paymentToken.transferFrom(msg.sender, address(this), price  * _mintAmount);
         }
 
@@ -60,26 +59,25 @@ contract GiversPFP is ERC721Enumerable, Ownable {
         }
     }
 
-    function toggleAllowList() public onlyOwner {
-        if (!allowListOnly) {
-            allowListOnly = true;
-        } else {
-            allowListOnly = false;
-        }
+    function setAllowListOnly(bool _allowListOnly) public onlyOwner {
+        allowListOnly = _allowListOnly;
     }
 
+    function _addToAllowList(address _address) internal {
+        allowList[_address] = true;
+    }
     function addToAllowList(address _address) public onlyOwner {
-        onAllowList[_address] = true;
+        allowList[_address] = true;
     }
 
     function addBatchToAllowList(address[] memory _addresses) public onlyOwner {
         for (uint256 i = 0; i < _addresses.length; i++) {
-            onAllowList[_addresses[i]] = true;
+            _addToAllowList(_addresses[i]);
         }
     }
 
     function removeFromAllowList(address _address) public onlyOwner {
-        onAllowList[_address] = false;
+        allowList[_address] = false;
     }
 
     function walletOfOwner(address _owner) public view returns (uint256[] memory) {
@@ -133,8 +131,12 @@ contract GiversPFP is ERC721Enumerable, Ownable {
         baseExtension = _newBaseExtension;
     }
 
-    function pause(bool _state) public onlyOwner {
-        paused = _state;
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
     }
 
     function withdraw() public {

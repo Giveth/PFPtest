@@ -62,7 +62,7 @@ contract TestGiversNFT is Test {
         nftContract.addToAllowList(minterOne);
         vm.prank(minterOne);
         nftContract.mint(mintAmount);
-        // 
+        //
     }
 
     function testAllowListMint() public {
@@ -113,7 +113,7 @@ contract TestGiversNFT is Test {
     function testOpenMint() public {
         // turn off allow list
         vm.prank(owner);
-        nftContract.toggleAllowList();
+        nftContract.setAllowListOnly(false);
         // mint a pfp
         vm.prank(minterOne);
         nftContract.mint(1);
@@ -128,7 +128,7 @@ contract TestGiversNFT is Test {
     function testFailOpenMint(uint32 _mintAmount) public {
         // turn off allow list
         vm.prank(owner);
-        nftContract.toggleAllowList();
+        nftContract.setAllowListOnly(false);
         // minter four has no payment tokens
         vm.startPrank(minterFour);
         paymentTokenContract.approve(address(nftContract), _price);
@@ -147,7 +147,7 @@ contract TestGiversNFT is Test {
     function testWithdraw() public {
         // turn off allow list
         vm.prank(owner);
-        nftContract.toggleAllowList();
+        nftContract.setAllowListOnly(false);
         // mint 9 tokens total from three users
         vm.prank(minterOne);
         nftContract.mint(3);
@@ -167,7 +167,7 @@ contract TestGiversNFT is Test {
     function testFailWithdraw() public {
                 // turn off allow list
         vm.prank(owner);
-        nftContract.toggleAllowList();
+        nftContract.setAllowListOnly(false);
         nftContract.withdraw();
         // mint 9 tokens total from three users
         vm.prank(minterOne);
@@ -181,6 +181,6 @@ contract TestGiversNFT is Test {
         nftContract.withdraw();
 
     }
-    
-    
+
+
 }
