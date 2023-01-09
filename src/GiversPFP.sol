@@ -113,6 +113,10 @@ contract GiversPFP is ERC721Enumerable, Ownable {
         price = _newPrice;
     }
 
+    function setPaymentToken(address _paymentToken) public onlyOwner {
+        paymentToken = IERC20(_paymentToken);
+    }
+
     function setmaxMintAmount(uint256 _newmaxMintAmount) public onlyOwner {
         maxMintAmount = _newmaxMintAmount;
     }
