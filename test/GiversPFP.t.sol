@@ -48,7 +48,6 @@ contract TestGiversNFT is Test {
         paymentTokenContract.approve(address(nftContract), 5000);
         vm.prank(minterThree);
         paymentTokenContract.approve(address(nftContract), 5000);
-
     }
 
     function testFailAllowListMint(uint32 mintAmount) public {
@@ -136,7 +135,7 @@ contract TestGiversNFT is Test {
         vm.stopPrank();
         // minter four has tokens, but less than minting price
         vm.prank(owner);
-        paymentTokenContract.mint(minterFour,_price - 1);
+        paymentTokenContract.mint(minterFour, _price - 1);
         vm.prank(minterFour);
         nftContract.mint(1);
         // minter one tries to mint over max amount
@@ -165,7 +164,7 @@ contract TestGiversNFT is Test {
     }
 
     function testFailWithdraw() public {
-                // turn off allow list
+        // turn off allow list
         vm.prank(owner);
         nftContract.setAllowListOnly(false);
         nftContract.withdraw();
@@ -179,8 +178,5 @@ contract TestGiversNFT is Test {
         // call withdraw - can be called by anyone
         nftContract.withdraw();
         nftContract.withdraw();
-
     }
-
-
 }

@@ -5,12 +5,14 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
-
+    using SafeERC20 for IERC20;
     using Strings for uint256;
-    string baseURI;
-    string public baseExtension = ".json";
+
+    string private baseURI;
+    string private baseExtension = ".json";
     uint256 public price;
     uint256 public maxSupply = 1000;
     uint256 public maxMintAmount = 5;
@@ -21,70 +23,66 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     mapping(address => bool) public allowList;
 
     constructor(
-        string memory _name,
-        string memory _symbol,
-        string memory _initBaseURI,
-        string memory _initNotRevealedUri,
-        IERC20 _paymentToken,
-        uint256 _price
-    ) ERC721(_name, _symbol) {
-        setBaseURI(_initBaseURI);
-        setNotRevealedURI(_initNotRevealedUri);
-        paymentToken = IERC20(_paymentToken);
-        price = _price;
+        string memory name_,
+        string memory symbol_,
+        string memory baseURI_,
+        string memory notRevealedUri_,
+        IERC20 paymentToken_,
+        uint256 price_
+    ) ERC721(name_, symbol_) {
+        baseURI = baseURI_;
+        notRevealedUri = notRevealedUri_;
+        paymentToken = paymentToken_;
+        price = price_;
     }
 
-    // internal
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
     }
 
-    // public
-    function mint(uint256 _mintAmount) public whenNotPaused {
+    function mint(uint256 mintAmount_) public whenNotPaused {
         uint256 supply = totalSupply();
-        require(_mintAmount > 0);
-        require(_mintAmount <= maxMintAmount);
-        require(supply + _mintAmount <= maxSupply);
+        require(mintAmount_ > 0); // TODO: add appropriate error message
+        require(mintAmount_ <= maxMintAmount); // TODO: add appropriate error message
+        require(supply + mintAmount_ <= maxSupply); // TODO: add appropriate error message
 
-        // UNCHECKED RETURN!!
-        if (msg.sender != owner() && !allowListOnly) {
-            paymentToken.transferFrom(msg.sender, address(this), price * _mintAmount);
-        } else if ((msg.sender != owner() && allowListOnly)) {
-            require(allowList[msg.sender], "you are not on the allow list!");
-            paymentToken.transferFrom(msg.sender, address(this), price  * _mintAmount);
+        if (msg.sender != owner()) {
+            require(!allowListOnly || allowList[msg.sender], "is not allowed to mint");
+            paymentToken.safeTransferFrom(msg.sender, address(this), price * mintAmount_);
         }
 
-        for (uint256 i = 1; i <= _mintAmount; i++) {
+        for (uint256 i = 1; i <= mintAmount_; i++) {
             _safeMint(msg.sender, supply + i);
         }
     }
 
-    function setAllowListOnly(bool _allowListOnly) public onlyOwner {
-        allowListOnly = _allowListOnly;
+    function setAllowListOnly(bool allowListOnly_) public onlyOwner {
+        allowListOnly = allowListOnly_;
     }
 
-    function _addToAllowList(address _address) internal {
-        allowList[_address] = true;
-    }
-    function addToAllowList(address _address) public onlyOwner {
-        allowList[_address] = true;
+    function _addToAllowList(address address_) internal {
+        allowList[address_] = true;
     }
 
-    function addBatchToAllowList(address[] memory _addresses) public onlyOwner {
-        for (uint256 i = 0; i < _addresses.length; i++) {
-            _addToAllowList(_addresses[i]);
+    function addToAllowList(address address_) public onlyOwner {
+        allowList[address_] = true;
+    }
+
+    function addBatchToAllowList(address[] memory addresses_) public onlyOwner {
+        for (uint256 i = 0; i < addresses_.length; i++) {
+            _addToAllowList(addresses_[i]);
         }
     }
 
-    function removeFromAllowList(address _address) public onlyOwner {
-        allowList[_address] = false;
+    function removeFromAllowList(address address_) public onlyOwner {
+        allowList[address_] = false;
     }
 
-    function walletOfOwner(address _owner) public view returns (uint256[] memory) {
-        uint256 ownerTokenCount = balanceOf(_owner);
+    function walletOfOwner(address owner_) public view returns (uint256[] memory) {
+        uint256 ownerTokenCount = balanceOf(owner_);
         uint256[] memory tokenIds = new uint256[](ownerTokenCount);
         for (uint256 i; i < ownerTokenCount; i++) {
-            tokenIds[i] = tokenOfOwnerByIndex(_owner, i);
+            tokenIds[i] = tokenOfOwnerByIndex(owner_, i);
         }
         return tokenIds;
     }
@@ -96,39 +94,32 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
             return notRevealedUri;
         }
 
-        string memory currentBaseURI = _baseURI();
-        return bytes(currentBaseURI).length > 0
-            ? string(abi.encodePacked(currentBaseURI, tokenId.toString(), baseExtension))
-            : "";
+        string memory baseURI_ = _baseURI();
+        return bytes(baseURI_).length > 0 ? string(abi.encodePacked(baseURI_, tokenId.toString(), baseExtension)) : "";
     }
 
-    //only owner
     function reveal() public onlyOwner {
         revealed = true;
     }
 
-    function setPrice(uint256 _newPrice) public onlyOwner {
-        price = _newPrice;
+    function setPrice(uint256 newPrice_) public onlyOwner {
+        price = newPrice_;
     }
 
-    function setPaymentToken(address _paymentToken) public onlyOwner {
-        paymentToken = IERC20(_paymentToken);
+    function setPaymentToken(IERC20 paymentToken_) public onlyOwner {
+        paymentToken = paymentToken_;
     }
 
-    function setmaxMintAmount(uint256 _newmaxMintAmount) public onlyOwner {
-        maxMintAmount = _newmaxMintAmount;
+    function setMaxMintAmount(uint256 maxMintAmount_) public onlyOwner {
+        maxMintAmount = maxMintAmount_;
     }
 
-    function setNotRevealedURI(string memory _notRevealedURI) public onlyOwner {
-        notRevealedUri = _notRevealedURI;
+    function setBaseURI(string memory baseURI_) public onlyOwner {
+        baseURI = baseURI_;
     }
 
-    function setBaseURI(string memory _newBaseURI) public onlyOwner {
-        baseURI = _newBaseURI;
-    }
-
-    function setBaseExtension(string memory _newBaseExtension) public onlyOwner {
-        baseExtension = _newBaseExtension;
+    function setBaseExtension(string memory baseExtension_) public onlyOwner {
+        baseExtension = baseExtension_;
     }
 
     function pause() public onlyOwner {
