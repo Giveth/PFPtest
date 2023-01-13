@@ -37,10 +37,11 @@ contract TestGiversNFT is Test {
     function setUp() public {
         vm.startPrank(owner);
         paymentTokenContract = new ERC20Mintable("mitch token", "MITCH");
-        nftContract = new GiversPFP(_name,  _symbol, _initBaseURI, _initNotRevealedUri, paymentTokenContract, _price);
+        nftContract = new GiversPFP(_name,  _symbol, _initNotRevealedUri, paymentTokenContract, _price);
         paymentTokenContract.mint(minterOne, 100000);
         paymentTokenContract.mint(minterTwo, 100000);
         paymentTokenContract.mint(minterThree, 100000);
+        nftContract.setBaseURI(_initBaseURI);
         vm.stopPrank();
         vm.prank(minterOne);
         paymentTokenContract.approve(address(nftContract), 5000);
@@ -84,7 +85,7 @@ contract TestGiversNFT is Test {
         nftContract.removeFromAllowList(minterOne);
         // attempt to mint while not on allow list
         vm.startPrank(minterOne);
-        vm.expectRevert("you are not on the allow list!");
+        vm.expectRevert("address is not on the allow list to mint!");
         nftContract.mint(1);
         vm.stopPrank();
     }
@@ -120,6 +121,7 @@ contract TestGiversNFT is Test {
         // mint 3 more pfps
         vm.prank(minterTwo);
         nftContract.mint(3);
+        
         // check balance of contract after minting 4 total pfps
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), _price * 4);
     }
@@ -157,6 +159,7 @@ contract TestGiversNFT is Test {
         // check contract token balance
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), _price * 9);
         // call withdraw - can be called by anyone
+        vm.prank(owner);
         nftContract.withdraw();
         // ensure owner address receives funds, nft contract is emptied
         assertEq(paymentTokenContract.balanceOf(owner), _price * 9);
