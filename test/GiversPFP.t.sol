@@ -212,19 +212,27 @@ contract TestGiversNFT is Test {
         nftContract.setPaymentToken(altPaymentToken);
         vm.stopPrank();
         vm.startPrank(minterOne);
+        // approve and mint token with new payment token
         altPaymentToken.approve(address(nftContract), 5000);
         nftContract.mint(1);
+        vm.stopPrank();
+        //verify balance
         assertEq(altPaymentToken.balanceOf(address(nftContract)), _price * 1);
+        vm.prank(owner);
+        nftContract.withdraw();
+        assertEq(altPaymentToken.balanceOf(address(owner)), _price * 1);
     }
 
     function testMaxSupply() public {
+        // change params to get to max supply quicker
         vm.startPrank(owner);
         nftContract.setAllowListOnly(false);
-        console.log(2^8);
         nftContract.setMaxMintAmount(255);
         nftContract.setPrice(5);
+        // mint tokens for minter four
         paymentTokenContract.mint(minterFour, 5000);
         vm.stopPrank();
+        // attempt to mint 1040 nfts when max supply is 1000
         vm.prank(minterOne);
         nftContract.mint(255);
         vm.prank(minterTwo);
@@ -235,10 +243,13 @@ contract TestGiversNFT is Test {
         vm.expectRevert("cannot exceed the maximum supply of tokens");
         nftContract.mint(255);
         vm.prank(owner);
+        // change max supply to actual nfts available
         nftContract.setMaxSupply(1290);
         vm.startPrank(minterFour);
+        //attempt to mint past old max supply
         paymentTokenContract.approve(address(nftContract), 5000);
         nftContract.mint(255);
+        // verify new total supply is past old max supply
         assertEq(nftContract.totalSupply(), 1040);
     }
 }
