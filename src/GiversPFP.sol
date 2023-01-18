@@ -22,6 +22,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     event UpdatedPrice(uint256 oldPrice_, uint256 newPrice_);
     event UpdatedPaymentToken(address oldPaymentToken_, address newPaymentToken_);
     event UpdatedMaxMint(uint8 mintAmount_);
+    event UpdatedMaxSupply(uint256 maxSupply_);
 
     string private baseURI;
     string private baseExtension = ".json";
@@ -57,9 +58,9 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
 /// @param mintAmount_ the amount of NFTs you wish to mint, cannot exceed the maxMintAmount variable
     function mint(uint256 mintAmount_) public whenNotPaused {
         uint256 supply = totalSupply();
-        require(mintAmount_ > 0, "must mint at least 1 token."); // TODO: add appropriate error message
-        require(mintAmount_ <= maxMintAmount, "cannot mint more than the maximum amount in one tx."); // TODO: add appropriate error message
-        require(supply + mintAmount_ <= maxSupply, "cannot exceed the maximum supply of tokens"); // TODO: add appropriate error message
+        require(mintAmount_ > 0, "must mint at least 1 token."); 
+        require(mintAmount_ <= maxMintAmount, "cannot mint more than the maximum amount in one tx."); 
+        require(supply + mintAmount_ <= maxSupply, "cannot exceed the maximum supply of tokens"); 
 
         if (msg.sender != owner()) {
             require(!allowListOnly || allowList[msg.sender], "address is not on the allow list to mint!");
@@ -172,10 +173,16 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     ///@notice change the maximum amount of NFTs of this collection that can be minted in on tx with mint()
     ///@param maxMintAmount_ the new maximum of NFTs that can be minted in one tx (max 256)
     function setMaxMintAmount(uint8 maxMintAmount_) external onlyOwner {
-        require(maxMintAmount_ < 2^8, "beyond safe amount to mint at once");
+        require(maxMintAmount_ <= 255, "beyond safe amount to mint at once");
         maxMintAmount = maxMintAmount_;
         emit UpdatedMaxMint(maxMintAmount);
+    }
 
+    ///@notice change the maximum supply of the NFT collection - used to extend the collection if there is more art available  
+    ///@param maxSupply_ the new max supply of the nft collection 
+    function setMaxSupply(uint256 maxSupply_) external onlyOwner {
+        maxSupply = maxSupply_;
+        emit UpdatedMaxSupply(maxSupply_);
     }
 
     ///@notice changes the base filename extension for the ipfs stored metadata (not images), by default this should be .json
