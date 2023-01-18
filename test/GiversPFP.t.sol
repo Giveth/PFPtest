@@ -182,4 +182,63 @@ contract TestGiversNFT is Test {
         nftContract.withdraw();
         nftContract.withdraw();
     }
+
+    function testChangePrice() public {
+        vm.startPrank(owner);
+        uint256 newPrice = 300;
+        nftContract.setPrice(newPrice);
+        nftContract.setAllowListOnly(false);
+        vm.stopPrank();
+        // mint a pfp
+        vm.prank(minterOne);
+        nftContract.mint(1);
+        assertEq(paymentTokenContract.balanceOf(address(nftContract)), newPrice);
+        // mint 3 more pfps
+        vm.prank(minterTwo);
+        nftContract.mint(3);
+        
+        // check balance of contract after minting 4 total pfps
+        assertEq(paymentTokenContract.balanceOf(address(nftContract)), newPrice * 4);
+    }
+
+    function testChangePaymentToken() public {
+        // create new ERC20 token
+        vm.startPrank(owner);
+        ERC20Mintable altPaymentToken = new ERC20Mintable("another token", "ANTO");
+        //mint new tokens
+        altPaymentToken.mint(minterOne, 5000);
+        nftContract.setAllowListOnly(false);
+        // change payment token
+        nftContract.setPaymentToken(altPaymentToken);
+        vm.stopPrank();
+        vm.startPrank(minterOne);
+        altPaymentToken.approve(address(nftContract), 5000);
+        nftContract.mint(1);
+        assertEq(altPaymentToken.balanceOf(address(nftContract)), _price * 1);
+    }
+
+    function testMaxSupply() public {
+        vm.startPrank(owner);
+        nftContract.setAllowListOnly(false);
+        console.log(2^8);
+        nftContract.setMaxMintAmount(255);
+        nftContract.setPrice(5);
+        paymentTokenContract.mint(minterFour, 5000);
+        vm.stopPrank();
+        vm.prank(minterOne);
+        nftContract.mint(255);
+        vm.prank(minterTwo);
+        nftContract.mint(255);
+        vm.prank(minterThree);
+        nftContract.mint(255);
+        vm.prank(minterFour);
+        vm.expectRevert("cannot exceed the maximum supply of tokens");
+        nftContract.mint(255);
+        vm.prank(owner);
+        nftContract.setMaxSupply(1290);
+        vm.startPrank(minterFour);
+        paymentTokenContract.approve(address(nftContract), 5000);
+        nftContract.mint(255);
+        assertEq(nftContract.totalSupply(), 1040);
+    }
 }
