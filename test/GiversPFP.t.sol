@@ -121,7 +121,7 @@ contract TestGiversNFT is Test {
         // mint 3 more pfps
         vm.prank(minterTwo);
         nftContract.mint(3);
-        
+
         // check balance of contract after minting 4 total pfps
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), _price * 4);
     }
@@ -196,7 +196,7 @@ contract TestGiversNFT is Test {
         // mint 3 more pfps
         vm.prank(minterTwo);
         nftContract.mint(3);
-        
+
         // check balance of contract after minting 4 total pfps
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), newPrice * 4);
     }

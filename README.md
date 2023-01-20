@@ -1,6 +1,6 @@
 # Givers PFP Contract Spec 
 
-ERC721 Enumerable base contract - contract has imported open-zeppelin ownable and pause controls
+ERC721 Enumerable base contract - contract has imported open-zeppelin Ownable and Pausable controls
 
 ## Allow List 
 
