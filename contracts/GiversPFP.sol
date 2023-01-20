@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 /// @title Givers PFP Collection by Giveth minter contract
 /// @notice modified from Hashlips NFT art engine contracts - https://github.com/HashLips/hashlips_nft_contract
@@ -23,7 +23,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     event UpdatedMaxSupply(uint256 maxSupply_);
 
     string private baseURI;
-    string private baseExtension = ".json";
+    string private baseExtension = '.json';
     uint256 public price;
     uint256 public maxSupply = 1000;
     string public notRevealedUri;
@@ -55,12 +55,12 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param mintAmount_ the amount of NFTs you wish to mint, cannot exceed the maxMintAmount variable
     function mint(uint256 mintAmount_) external whenNotPaused {
         uint256 supply = totalSupply();
-        require(mintAmount_ > 0, "must mint at least 1 token.");
-        require(mintAmount_ <= maxMintAmount, "cannot mint more than the maximum amount in one tx.");
-        require(supply + mintAmount_ <= maxSupply, "cannot exceed the maximum supply of tokens");
+        require(mintAmount_ > 0, 'must mint at least 1 token.');
+        require(mintAmount_ <= maxMintAmount, 'cannot mint more than the maximum amount in one tx.');
+        require(supply + mintAmount_ <= maxSupply, 'cannot exceed the maximum supply of tokens');
 
         if (msg.sender != owner()) {
-            require(!allowListOnly || allowList[msg.sender], "address is not on the allow list to mint!");
+            require(!allowListOnly || allowList[msg.sender], 'address is not on the allow list to mint!');
             paymentToken.safeTransferFrom(msg.sender, address(this), price * mintAmount_);
             // check w/ amin how to check return from safetransfer calls
             // require(success, "payment transaction has failed! Try again");
@@ -81,14 +81,14 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param address_ the address you wish to add to the allow list
     function _addToAllowList(address address_) internal {
         allowList[address_] = true;
-        emit UpdateAllowList("add", address_);
+        emit UpdateAllowList('add', address_);
     }
 
     /// @notice add a given address to the allow list, allowing it to call mint when allow list is on
     /// @param address_ the address you wish to add to the allow list
     function addToAllowList(address address_) external onlyOwner {
         allowList[address_] = true;
-        emit UpdateAllowList("add", address_);
+        emit UpdateAllowList('add', address_);
     }
 
     /// @notice adds an array of specified addresses to the allow list, allowing them to call mint when allow list is on
@@ -96,7 +96,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     function addBatchToAllowList(address[] memory addresses_) external onlyOwner {
         for (uint256 i = 0; i < addresses_.length; i++) {
             _addToAllowList(addresses_[i]);
-            emit UpdateAllowList("add", addresses_[i]);
+            emit UpdateAllowList('add', addresses_[i]);
         }
     }
 
@@ -104,7 +104,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param address_ the address you wish to remove from the allow list
     function removeFromAllowList(address address_) external onlyOwner {
         allowList[address_] = false;
-        emit UpdateAllowList("remove", address_);
+        emit UpdateAllowList('remove', address_);
     }
 
     /// @notice shows which NFT IDs are owned by a specific address
@@ -121,14 +121,14 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice displays the ipfs link to where the metadata is stored for a specific NFT ID
     /// @param tokenId the NFT ID of which you wish to get the ipfs CID hash for
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
 
         if (revealed == false) {
             return notRevealedUri;
         }
 
         string memory baseURI_ = _baseURI();
-        return bytes(baseURI_).length > 0 ? string(abi.encodePacked(baseURI_, tokenId.toString(), baseExtension)) : "";
+        return bytes(baseURI_).length > 0 ? string(abi.encodePacked(baseURI_, tokenId.toString(), baseExtension)) : '';
     }
 
     /// @notice change the ipfs CID hash of where the nft metadata is stored. effectively can change the metadata of all nfts
@@ -205,7 +205,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice withdraws all payment token funds held by this contract to the contract owner address
     function withdraw() external onlyOwner {
         uint256 tokenBalance = paymentToken.balanceOf(address(this));
-        require(tokenBalance != 0, "no funds to withdraw!");
+        require(tokenBalance != 0, 'no funds to withdraw!');
         paymentToken.safeTransfer(owner(), tokenBalance);
         emit Withdraw(owner(), tokenBalance);
     }
