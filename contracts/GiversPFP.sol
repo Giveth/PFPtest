@@ -112,7 +112,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     function walletOfOwner(address owner_) external view returns (uint256[] memory) {
         uint256 ownerTokenCount = balanceOf(owner_);
         uint256[] memory tokenIds = new uint256[](ownerTokenCount);
-        for (uint256 i; i < ownerTokenCount; i++) {
+        for (uint256 i = 0; i < ownerTokenCount; i++) {
             tokenIds[i] = tokenOfOwnerByIndex(owner_, i);
         }
         return tokenIds;
@@ -173,7 +173,8 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice change the maximum amount of NFTs of this collection that can be minted in on tx with mint()
     /// @param maxMintAmount_ the new maximum of NFTs that can be minted in one tx (max 256)
     function setMaxMintAmount(uint8 maxMintAmount_) external onlyOwner {
-        require(maxMintAmount_ <= 255, "beyond safe amount to mint at once");
+        // Uint8 type max amount is 255
+        // require(maxMintAmount_ <= 255, "beyond safe amount to mint at once");
         maxMintAmount = maxMintAmount_;
         emit UpdatedMaxMint(maxMintAmount);
     }
@@ -205,7 +206,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     function withdraw() external onlyOwner {
         uint256 tokenBalance = paymentToken.balanceOf(address(this));
         require(tokenBalance != 0, "no funds to withdraw!");
-        paymentToken.transfer(owner(), tokenBalance);
+        paymentToken.safeTransfer(owner(), tokenBalance);
         emit Withdraw(owner(), tokenBalance);
     }
 }

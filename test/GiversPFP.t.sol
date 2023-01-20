@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "forge-std/Test.sol";
 import "ds-test/test.sol";
-import "../src/GiversPFP.sol";
+import "../contracts/GiversPFP.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract ERC20Mintable is ERC20, Ownable {
