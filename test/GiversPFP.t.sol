@@ -250,6 +250,6 @@ contract TestGiversNFT is Test {
         paymentTokenContract.approve(address(nftContract), 5000);
         nftContract.mint(255);
         // verify new total supply is past old max supply
-        assertEq(nftContract.totalSupply(), 1040);
+        assertEq(nftContract.totalSupply(), 1020);
     }
 }
