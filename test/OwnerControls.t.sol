@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0 <0.9.0;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "forge-std/Test.sol";
-import "ds-test/test.sol";
-import "../contracts/GiversPFP.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import 'forge-std/Test.sol';
+import 'ds-test/test.sol';
+import '../contracts/GiversPFP.sol';
+import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract ERC20Mintable is ERC20, Ownable {
     string private _name;
@@ -20,10 +20,10 @@ contract ERC20Mintable is ERC20, Ownable {
 }
 
 contract TestGiversNFT is Test {
-    string _initBaseURI = "ipfs://QmTSadPfscgJMjti4SEaqiLuZ4rVg1wckrRSdo8hqG9M4U/";
-    string _initNotRevealedUri = "ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json";
-    string _name = "testPFP";
-    string _symbol = "TEST";
+    string _initBaseURI = 'ipfs://QmTSadPfscgJMjti4SEaqiLuZ4rVg1wckrRSdo8hqG9M4U/';
+    string _initNotRevealedUri = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
+    string _name = 'testPFP';
+    string _symbol = 'TEST';
     uint256 _price = 500;
     GiversPFP public nftContract;
     ERC20Mintable public paymentTokenContract;
@@ -146,7 +146,7 @@ contract TestGiversNFT is Test {
         vm.prank(minterThree);
         nftContract.mint(255);
         vm.prank(minterFour);
-        vm.expectRevert("cannot exceed the maximum supply of tokens");
+        vm.expectRevert('cannot exceed the maximum supply of tokens');
         nftContract.mint(255);
         vm.prank(owner);
         // change max supply to actual nfts available
