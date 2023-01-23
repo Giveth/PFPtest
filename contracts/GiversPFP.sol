@@ -13,6 +13,17 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     using SafeERC20 for IERC20;
     using Strings for uint256;
 
+    /// address `user` is not on the allow list to mint
+    error NotInAllowList(address user);
+    /// ERC721Metadata: URI query for nonexistent token `tokenId`
+    error TokenNotExists(uint256 tokenId);
+    /// Zero mint amount, amount must be positive
+    error ZeroMintAmount();
+    /// Cannot mint more than `maxMintAmount` in one tx
+    error ExceedMaxMintAmount(uint256 maxMintAmount);
+    /// Cannot exceed total `maxSupply` supply of tokens
+    error ExceedTotalSupplyLimit(uint256 maxSupply);
+
     event Withdraw(address address_, uint256 amount_);
     event ChangedURI(string oldURI_, string newURI_);
     event UpdateAllowList(string updatedType_, address address_);
@@ -55,15 +66,21 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param mintAmount_ the amount of NFTs you wish to mint, cannot exceed the maxMintAmount variable
     function mint(uint256 mintAmount_) external whenNotPaused {
         uint256 supply = totalSupply();
-        require(mintAmount_ > 0, 'must mint at least 1 token.');
-        require(mintAmount_ <= maxMintAmount, 'cannot mint more than the maximum amount in one tx.');
-        require(supply + mintAmount_ <= maxSupply, 'cannot exceed the maximum supply of tokens');
+        if (mintAmount_ == 0) {
+            revert ZeroMintAmount();
+        }
+        if (mintAmount_ > maxMintAmount) {
+            revert ExceedMaxMintAmount(maxMintAmount);
+        }
+        if (supply + mintAmount_ > maxSupply) {
+            revert ExceedTotalSupplyLimit(maxSupply);
+        }
 
         if (msg.sender != owner()) {
-            require(!allowListOnly || allowList[msg.sender], 'address is not on the allow list to mint!');
+            if (allowListOnly && !allowList[msg.sender]) {
+               revert NotInAllowList(msg.sender);
+            }
             paymentToken.safeTransferFrom(msg.sender, address(this), price * mintAmount_);
-            // check w/ amin how to check return from safetransfer calls
-            // require(success, "payment transaction has failed! Try again");
         }
 
         for (uint256 i = 1; i <= mintAmount_; i++) {
@@ -121,7 +138,9 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice displays the ipfs link to where the metadata is stored for a specific NFT ID
     /// @param tokenId the NFT ID of which you wish to get the ipfs CID hash for
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
+        if (!_exists(tokenId)) {
+            revert TokenNotExists(tokenId);
+        }
 
         if (revealed == false) {
             return notRevealedUri;
@@ -163,8 +182,9 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
 
     /// @notice changes the ERC20 token accepted to pay for NFTs to mint
     /// @param paymentToken_ the address of a compatible ERC20 token to accept as payments
-    /// @dev make sure to change where the approve method is called before mint() to match the new token after calling this function
-    function setPaymentToken(IERC20 paymentToken_) external onlyOwner {
+    /// @dev withdraws any positive balance of old token before chaining paymentToken
+    function withdrawAndChangePaymentToken(IERC20 paymentToken_) external onlyOwner {
+        _withdraw();
         address oldPaymentToken = address(paymentToken);
         paymentToken = paymentToken_;
         emit UpdatedPaymentToken(oldPaymentToken, address(paymentToken));
@@ -173,8 +193,6 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice change the maximum amount of NFTs of this collection that can be minted in on tx with mint()
     /// @param maxMintAmount_ the new maximum of NFTs that can be minted in one tx (max 256)
     function setMaxMintAmount(uint8 maxMintAmount_) external onlyOwner {
-        // Uint8 type max amount is 255
-        // require(maxMintAmount_ <= 255, "beyond safe amount to mint at once");
         maxMintAmount = maxMintAmount_;
         emit UpdatedMaxMint(maxMintAmount);
     }
@@ -203,10 +221,17 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     }
 
     /// @notice withdraws all payment token funds held by this contract to the contract owner address
-    function withdraw() external onlyOwner {
+    function _withdraw() internal {
         uint256 tokenBalance = paymentToken.balanceOf(address(this));
-        require(tokenBalance != 0, 'no funds to withdraw!');
-        paymentToken.safeTransfer(owner(), tokenBalance);
-        emit Withdraw(owner(), tokenBalance);
+        if (tokenBalance > 0) {
+            paymentToken.safeTransfer(owner(), tokenBalance);
+            emit Withdraw(owner(), tokenBalance);
+        }
     }
+
+    function withdraw() external onlyOwner {
+        _withdraw();
+    }
+
+
 }

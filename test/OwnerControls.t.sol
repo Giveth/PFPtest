@@ -115,7 +115,7 @@ contract TestGiversNFT is Test {
         altPaymentToken.mint(minterOne, 5000);
         nftContract.setAllowListOnly(false);
         // change payment token
-        nftContract.setPaymentToken(altPaymentToken);
+        nftContract.withdrawAndChangePaymentToken(altPaymentToken);
         vm.stopPrank();
         vm.startPrank(minterOne);
         // approve and mint token with new payment token
@@ -146,7 +146,7 @@ contract TestGiversNFT is Test {
         vm.prank(minterThree);
         nftContract.mint(255);
         vm.prank(minterFour);
-        vm.expectRevert('cannot exceed the maximum supply of tokens');
+        vm.expectRevert(abi.encodeWithSelector(GiversPFP.ExceedTotalSupplyLimit.selector, 1000));
         nftContract.mint(255);
         vm.prank(owner);
         // change max supply to actual nfts available
