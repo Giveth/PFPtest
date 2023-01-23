@@ -13,6 +13,13 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     using SafeERC20 for IERC20;
     using Strings for uint256;
 
+    // address is not on the allow list to mint
+    error NotInAllowList();
+    error TokenNotExists();
+    error ZeroMintAmount();
+    error ExceedMaxMintAmount();
+    error ExceedTotalSupplyLimit();
+
     event Withdraw(address address_, uint256 amount_);
     event ChangedURI(string oldURI_, string newURI_);
     event UpdateAllowList(string updatedType_, address address_);
@@ -55,15 +62,21 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param mintAmount_ the amount of NFTs you wish to mint, cannot exceed the maxMintAmount variable
     function mint(uint256 mintAmount_) external whenNotPaused {
         uint256 supply = totalSupply();
-        require(mintAmount_ > 0, 'must mint at least 1 token.');
-        require(mintAmount_ <= maxMintAmount, 'cannot mint more than the maximum amount in one tx.');
-        require(supply + mintAmount_ <= maxSupply, 'cannot exceed the maximum supply of tokens');
+        if (mintAmount_ == 0) {
+            revert ZeroMintAmount();
+        }
+        if (mintAmount_ > maxMintAmount) {
+            revert ExceedMaxMintAmount();
+        }
+        if (supply + mintAmount_ > maxSupply) {
+            revert ExceedTotalSupplyLimit();
+        }
 
         if (msg.sender != owner()) {
-            require(!allowListOnly || allowList[msg.sender], 'address is not on the allow list to mint!');
+            if (allowListOnly && !allowList[msg.sender]) {
+               revert NotInAllowList();
+            }
             paymentToken.safeTransferFrom(msg.sender, address(this), price * mintAmount_);
-            // check w/ amin how to check return from safetransfer calls
-            // require(success, "payment transaction has failed! Try again");
         }
 
         for (uint256 i = 1; i <= mintAmount_; i++) {
@@ -121,7 +134,9 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice displays the ipfs link to where the metadata is stored for a specific NFT ID
     /// @param tokenId the NFT ID of which you wish to get the ipfs CID hash for
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
+        if (!_exists(tokenId)) {
+            revert TokenNotExists();
+        }
 
         if (revealed == false) {
             return notRevealedUri;
@@ -173,8 +188,6 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice change the maximum amount of NFTs of this collection that can be minted in on tx with mint()
     /// @param maxMintAmount_ the new maximum of NFTs that can be minted in one tx (max 256)
     function setMaxMintAmount(uint8 maxMintAmount_) external onlyOwner {
-        // Uint8 type max amount is 255
-        // require(maxMintAmount_ <= 255, "beyond safe amount to mint at once");
         maxMintAmount = maxMintAmount_;
         emit UpdatedMaxMint(maxMintAmount);
     }
@@ -205,8 +218,9 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice withdraws all payment token funds held by this contract to the contract owner address
     function withdraw() external onlyOwner {
         uint256 tokenBalance = paymentToken.balanceOf(address(this));
-        require(tokenBalance != 0, 'no funds to withdraw!');
-        paymentToken.safeTransfer(owner(), tokenBalance);
-        emit Withdraw(owner(), tokenBalance);
+        if (tokenBalance > 0) {
+            paymentToken.safeTransfer(owner(), tokenBalance);
+            emit Withdraw(owner(), tokenBalance);
+        }
     }
 }

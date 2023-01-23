@@ -55,8 +55,6 @@ contract TestGiversNFT is Test {
         // test trying to mint not being on allow list
         vm.prank(minterOne);
         nftContract.mint(1);
-        uint256 contractBalance = paymentTokenContract.balanceOf(address(nftContract));
-        console.log(contractBalance);
     }
 
     function testAllowListMint() public {
@@ -107,7 +105,7 @@ contract TestGiversNFT is Test {
         assertEq(nftContract.allowList(minterOne), false);
         // attempt to mint while not on allow list
         vm.startPrank(minterOne);
-        vm.expectRevert('address is not on the allow list to mint!');
+        vm.expectRevert(GiversPFP.NotInAllowList.selector);
         nftContract.mint(1);
         vm.stopPrank();
     }

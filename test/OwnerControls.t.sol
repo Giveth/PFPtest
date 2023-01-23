@@ -146,7 +146,7 @@ contract TestGiversNFT is Test {
         vm.prank(minterThree);
         nftContract.mint(255);
         vm.prank(minterFour);
-        vm.expectRevert('cannot exceed the maximum supply of tokens');
+        vm.expectRevert(GiversPFP.ExceedTotalSupplyLimit.selector);
         nftContract.mint(255);
         vm.prank(owner);
         // change max supply to actual nfts available
