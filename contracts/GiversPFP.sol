@@ -178,8 +178,9 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
 
     /// @notice changes the ERC20 token accepted to pay for NFTs to mint
     /// @param paymentToken_ the address of a compatible ERC20 token to accept as payments
-    /// @dev make sure to change where the approve method is called before mint() to match the new token after calling this function
-    function setPaymentToken(IERC20 paymentToken_) external onlyOwner {
+    /// @dev withdraws any positive balance of old token before chaining paymentToken
+    function withdrawAndChangePaymentToken(IERC20 paymentToken_) external onlyOwner {
+        _withdraw();
         address oldPaymentToken = address(paymentToken);
         paymentToken = paymentToken_;
         emit UpdatedPaymentToken(oldPaymentToken, address(paymentToken));
@@ -216,11 +217,17 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     }
 
     /// @notice withdraws all payment token funds held by this contract to the contract owner address
-    function withdraw() external onlyOwner {
+    function _withdraw() internal {
         uint256 tokenBalance = paymentToken.balanceOf(address(this));
         if (tokenBalance > 0) {
             paymentToken.safeTransfer(owner(), tokenBalance);
             emit Withdraw(owner(), tokenBalance);
         }
     }
+
+    function withdraw() external onlyOwner {
+        _withdraw();
+    }
+
+
 }

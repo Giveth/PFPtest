@@ -115,7 +115,7 @@ contract TestGiversNFT is Test {
         altPaymentToken.mint(minterOne, 5000);
         nftContract.setAllowListOnly(false);
         // change payment token
-        nftContract.setPaymentToken(altPaymentToken);
+        nftContract.withdrawAndChangePaymentToken(altPaymentToken);
         vm.stopPrank();
         vm.startPrank(minterOne);
         // approve and mint token with new payment token
