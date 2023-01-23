@@ -146,7 +146,7 @@ contract TestGiversNFT is Test {
         vm.prank(minterThree);
         nftContract.mint(255);
         vm.prank(minterFour);
-        vm.expectRevert(GiversPFP.ExceedTotalSupplyLimit.selector);
+        vm.expectRevert(abi.encodeWithSelector(GiversPFP.ExceedTotalSupplyLimit.selector, 1000));
         nftContract.mint(255);
         vm.prank(owner);
         // change max supply to actual nfts available

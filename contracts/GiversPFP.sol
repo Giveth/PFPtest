@@ -13,12 +13,16 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     using SafeERC20 for IERC20;
     using Strings for uint256;
 
-    // address is not on the allow list to mint
-    error NotInAllowList();
-    error TokenNotExists();
+    /// address `user` is not on the allow list to mint
+    error NotInAllowList(address user);
+    /// ERC721Metadata: URI query for nonexistent token `tokenId`
+    error TokenNotExists(uint256 tokenId);
+    /// Zero mint amount, amount must be positive
     error ZeroMintAmount();
-    error ExceedMaxMintAmount();
-    error ExceedTotalSupplyLimit();
+    /// Cannot mint more than `maxMintAmount` in one tx
+    error ExceedMaxMintAmount(uint256 maxMintAmount);
+    /// Cannot exceed total `maxSupply` supply of tokens
+    error ExceedTotalSupplyLimit(uint256 maxSupply);
 
     event Withdraw(address address_, uint256 amount_);
     event ChangedURI(string oldURI_, string newURI_);
@@ -66,15 +70,15 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
             revert ZeroMintAmount();
         }
         if (mintAmount_ > maxMintAmount) {
-            revert ExceedMaxMintAmount();
+            revert ExceedMaxMintAmount(maxMintAmount);
         }
         if (supply + mintAmount_ > maxSupply) {
-            revert ExceedTotalSupplyLimit();
+            revert ExceedTotalSupplyLimit(maxSupply);
         }
 
         if (msg.sender != owner()) {
             if (allowListOnly && !allowList[msg.sender]) {
-               revert NotInAllowList();
+               revert NotInAllowList(msg.sender);
             }
             paymentToken.safeTransferFrom(msg.sender, address(this), price * mintAmount_);
         }
@@ -135,7 +139,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param tokenId the NFT ID of which you wish to get the ipfs CID hash for
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         if (!_exists(tokenId)) {
-            revert TokenNotExists();
+            revert TokenNotExists(tokenId);
         }
 
         if (revealed == false) {

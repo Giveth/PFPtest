@@ -105,7 +105,7 @@ contract TestGiversNFT is Test {
         assertEq(nftContract.allowList(minterOne), false);
         // attempt to mint while not on allow list
         vm.startPrank(minterOne);
-        vm.expectRevert(GiversPFP.NotInAllowList.selector);
+        vm.expectRevert(abi.encodeWithSelector(GiversPFP.NotInAllowList.selector, minterOne));
         nftContract.mint(1);
         vm.stopPrank();
     }
