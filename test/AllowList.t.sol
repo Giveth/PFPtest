@@ -34,6 +34,9 @@ contract TestGiversNFT is Test {
     address internal minterThree = address(4);
     address internal minterFour = address(5);
 
+    event AllowListAdded(address indexed account);
+    event AllowListRemoved(address indexed account);
+
     function setUp() public {
         vm.startPrank(owner);
         paymentTokenContract = new ERC20Mintable("mitch token", "MITCH");
@@ -43,6 +46,7 @@ contract TestGiversNFT is Test {
         paymentTokenContract.mint(minterThree, 100000);
         nftContract.setBaseURI(_initBaseURI);
         vm.stopPrank();
+
         vm.prank(minterOne);
         paymentTokenContract.approve(address(nftContract), 5000);
         vm.prank(minterTwo);
@@ -61,11 +65,16 @@ contract TestGiversNFT is Test {
         vm.startPrank(owner);
         // test minting 1 token from owner - should not cost tokens
         nftContract.mint(1);
+
         // allow minter one to mint tokens
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit AllowListAdded(minterOne);
         nftContract.addToAllowList(minterOne);
-        vm.stopPrank();
+
         // mint 1 token to minterOne check contract balance
+        vm.stopPrank();
         vm.startPrank(minterOne);
+
         nftContract.mint(1);
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), _price);
         // mint 3 tokens to minterThree check contract balance
@@ -82,6 +91,14 @@ contract TestGiversNFT is Test {
         allowList[1] = minterTwo;
         allowList[2] = minterThree;
         // add array to allowlist
+
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit AllowListAdded(minterOne);
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit AllowListAdded(minterTwo);
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit AllowListAdded(minterThree);
+
         nftContract.addBatchToAllowList(allowList);
         // mint nfts for each
         vm.prank(minterOne);
@@ -92,21 +109,28 @@ contract TestGiversNFT is Test {
         nftContract.mint(1);
         // check balance is correct
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), _price * 6);
+
+        vm.startPrank(minterFour);
+        vm.expectRevert(abi.encodeWithSelector(GiversPFP.NotInAllowList.selector, minterFour));
+        nftContract.mint(1);
     }
 
     function testRemoveAllowList() public {
-        assertEq(nftContract.allowList(minterOne), false);
+        assertFalse(nftContract.allowList(minterOne));
         vm.prank(owner);
         nftContract.addToAllowList(minterOne);
-        assertEq(nftContract.allowList(minterOne), true);
+        assertTrue(nftContract.allowList(minterOne));
         // remove from allow list
         vm.prank(owner);
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit AllowListRemoved(minterOne);
+
         nftContract.removeFromAllowList(minterOne);
-        assertEq(nftContract.allowList(minterOne), false);
+        assertFalse(nftContract.allowList(minterOne));
+
         // attempt to mint while not on allow list
         vm.startPrank(minterOne);
         vm.expectRevert(abi.encodeWithSelector(GiversPFP.NotInAllowList.selector, minterOne));
         nftContract.mint(1);
-        vm.stopPrank();
     }
 }

@@ -24,14 +24,16 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// Cannot exceed total `maxSupply` supply of tokens
     error ExceedTotalSupplyLimit(uint256 maxSupply);
 
-    event Withdraw(address address_, uint256 amount_);
-    event ChangedURI(string oldURI_, string newURI_);
-    event UpdateAllowList(string updatedType_, address address_);
+    event Withdrawn(address indexed account, uint256 amount);
+    event ChangedURI(string oldURI, string newURI);
+    event ChangedBasedExtension(string oldExtension, string newExtension);
+    event AllowListAdded(address indexed account);
+    event AllowListRemoved(address indexed account);
     event RevealArt();
-    event UpdatedPrice(uint256 oldPrice_, uint256 newPrice_);
-    event UpdatedPaymentToken(address oldPaymentToken_, address newPaymentToken_);
-    event UpdatedMaxMint(uint8 mintAmount_);
-    event UpdatedMaxSupply(uint256 maxSupply_);
+    event UpdatedPrice(uint256 oldPrice, uint256 newPrice);
+    event UpdatedPaymentToken(address indexed oldPaymentToken, address indexed newPaymentToken);
+    event UpdatedMaxMint(uint8 newMaxMint);
+    event UpdatedMaxSupply(uint256 newMaxSupply);
 
     string private baseURI;
     string private baseExtension = '.json';
@@ -78,7 +80,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
 
         if (msg.sender != owner()) {
             if (allowListOnly && !allowList[msg.sender]) {
-               revert NotInAllowList(msg.sender);
+                revert NotInAllowList(msg.sender);
             }
             paymentToken.safeTransferFrom(msg.sender, address(this), price * mintAmount_);
         }
@@ -98,22 +100,23 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param address_ the address you wish to add to the allow list
     function _addToAllowList(address address_) internal {
         allowList[address_] = true;
-        emit UpdateAllowList('add', address_);
+        emit AllowListAdded(address_);
     }
 
     /// @notice add a given address to the allow list, allowing it to call mint when allow list is on
     /// @param address_ the address you wish to add to the allow list
     function addToAllowList(address address_) external onlyOwner {
-        allowList[address_] = true;
-        emit UpdateAllowList('add', address_);
+        _addToAllowList(address_);
     }
 
     /// @notice adds an array of specified addresses to the allow list, allowing them to call mint when allow list is on
     /// @param addresses_ an array of the addresses you wish to add to the allow list
     function addBatchToAllowList(address[] memory addresses_) external onlyOwner {
-        for (uint256 i = 0; i < addresses_.length; i++) {
+        for (uint256 i = 0; i < addresses_.length;) {
             _addToAllowList(addresses_[i]);
-            emit UpdateAllowList('add', addresses_[i]);
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -121,7 +124,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param address_ the address you wish to remove from the allow list
     function removeFromAllowList(address address_) external onlyOwner {
         allowList[address_] = false;
-        emit UpdateAllowList('remove', address_);
+        emit AllowListRemoved(address_);
     }
 
     /// @notice shows which NFT IDs are owned by a specific address
@@ -207,6 +210,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice changes the base filename extension for the ipfs stored metadata (not images), by default this should be .json
     /// @param baseExtension_ the new filename extension for nft metadata
     function setBaseExtension(string memory baseExtension_) external onlyOwner {
+        emit ChangedBasedExtension(baseExtension, baseExtension_);
         baseExtension = baseExtension_;
     }
 
@@ -225,13 +229,11 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
         uint256 tokenBalance = paymentToken.balanceOf(address(this));
         if (tokenBalance > 0) {
             paymentToken.safeTransfer(owner(), tokenBalance);
-            emit Withdraw(owner(), tokenBalance);
+            emit Withdrawn(owner(), tokenBalance);
         }
     }
 
     function withdraw() external onlyOwner {
         _withdraw();
     }
-
-
 }

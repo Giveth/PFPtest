@@ -57,6 +57,7 @@ contract TestGiversNFT is Test {
 
     function testOpenMint() public {
         // mint a pfp
+        assertEq(paymentTokenContract.balanceOf(address(nftContract)), 0);
         vm.prank(minterOne);
         nftContract.mint(1);
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), _price);
@@ -72,7 +73,6 @@ contract TestGiversNFT is Test {
         vm.startPrank(minterFour);
         paymentTokenContract.approve(address(nftContract), _price);
         nftContract.mint(1);
-        vm.stopPrank();
     }
 
     function testFailNotEnoughFunds() public {

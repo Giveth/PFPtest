@@ -34,6 +34,12 @@ contract TestGiversNFT is Test {
     address internal minterThree = address(4);
     address internal minterFour = address(5);
 
+    event Withdrawn(address indexed account, uint256 amount);
+    event UpdatedPrice(uint256 oldPrice, uint256 newPrice);
+    event UpdatedPaymentToken(address indexed oldPaymentToken, address indexed newPaymentToken);
+    event UpdatedMaxMint(uint8 newMaxMint);
+    event UpdatedMaxSupply(uint256 newMaxSupply);
+
     function setUp() public {
         vm.startPrank(owner);
         paymentTokenContract = new ERC20Mintable("mitch token", "MITCH");
@@ -66,6 +72,8 @@ contract TestGiversNFT is Test {
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), _price * 9);
         // call withdraw - can be called by anyone
         vm.prank(owner);
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit Withdrawn(owner, _price * 9);
         nftContract.withdraw();
         // ensure owner address receives funds, nft contract is emptied
         assertEq(paymentTokenContract.balanceOf(owner), _price * 9);
@@ -92,6 +100,8 @@ contract TestGiversNFT is Test {
     function testChangePrice() public {
         vm.startPrank(owner);
         uint256 newPrice = 300;
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit UpdatedPrice(_price, newPrice);
         nftContract.setPrice(newPrice);
         nftContract.setAllowListOnly(false);
         vm.stopPrank();
@@ -115,6 +125,8 @@ contract TestGiversNFT is Test {
         altPaymentToken.mint(minterOne, 5000);
         nftContract.setAllowListOnly(false);
         // change payment token
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit UpdatedPaymentToken(address(paymentTokenContract), address(altPaymentToken));
         nftContract.withdrawAndChangePaymentToken(altPaymentToken);
         vm.stopPrank();
         vm.startPrank(minterOne);
@@ -133,6 +145,8 @@ contract TestGiversNFT is Test {
         // change params to get to max supply quicker
         vm.startPrank(owner);
         nftContract.setAllowListOnly(false);
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit UpdatedMaxMint(255);
         nftContract.setMaxMintAmount(255);
         nftContract.setPrice(5);
         // mint tokens for minter four
@@ -150,6 +164,8 @@ contract TestGiversNFT is Test {
         nftContract.mint(255);
         vm.prank(owner);
         // change max supply to actual nfts available
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit UpdatedMaxSupply(1290);
         nftContract.setMaxSupply(1290);
         vm.startPrank(minterFour);
         //attempt to mint past old max supply
