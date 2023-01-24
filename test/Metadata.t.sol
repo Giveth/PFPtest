@@ -31,6 +31,10 @@ contract TestGiversNFT is Test {
     address internal owner = address(1);
     address internal minterOne = address(2);
 
+    event RevealArt();
+    event ChangedURI(string oldURI, string newURI);
+    event ChangedBasedExtension(string oldExtension, string newExtension);
+
     function setUp() public {
         vm.startPrank(owner);
         paymentTokenContract = new ERC20Mintable("mitch token", "MITCH");
@@ -49,6 +53,10 @@ contract TestGiversNFT is Test {
         assertEq(_initNotRevealedUri, nftContract.tokenURI(1));
         vm.startPrank(owner);
         // reveal art - enter in URI - test metadata target has changed
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit ChangedURI('', 'testing/');
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit RevealArt();
         nftContract.reveal('testing/');
         assertEq(nftContract.tokenURI(1), 'testing/1.json');
     }
@@ -67,6 +75,8 @@ contract TestGiversNFT is Test {
         // reveal art - enter in URI
         nftContract.reveal('testing/');
         // change URI again with setBaseURI
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit ChangedURI('testing/', 'anotherTest/');
         nftContract.setBaseURI('anotherTest/');
         // should match baseURI now that art has been revealed
         assertEq(nftContract.tokenURI(1), 'anotherTest/1.json');
@@ -84,6 +94,8 @@ contract TestGiversNFT is Test {
     function testSetBaseExtension() public {
         vm.startPrank(owner);
         nftContract.reveal('testing/');
+        vm.expectEmit(true, true, true, true, address(nftContract));
+        emit ChangedBasedExtension('.json', '.txt');
         nftContract.setBaseExtension('.txt');
         assertEq(nftContract.tokenURI(1), 'testing/1.txt');
     }
