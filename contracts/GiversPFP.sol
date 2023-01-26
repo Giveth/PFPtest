@@ -240,8 +240,8 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
 
     ///@notice allows the owner to withdraw ether from this contract - we don't expect this contract to hold ether, but just in case...
     function withdrawEther() external payable onlyOwner {
-      (bool sent, bytes memory data) = payable(owner()).call{value: address(this).balance}("");
-      require(sent, "Failed to send Ether");
+        (bool sent, bytes memory data) = payable(owner()).call{value: address(this).balance}('');
+        require(sent, 'Failed to send Ether');
     }
 
     // Function to receive Ether. msg.data must be empty

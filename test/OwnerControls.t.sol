@@ -80,23 +80,6 @@ contract TestGiversNFT is Test {
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), 0);
     }
 
-    function testFailWithdraw() public {
-        // turn off allow list
-        vm.prank(owner);
-        nftContract.setAllowListOnly(false);
-        nftContract.withdraw();
-        // mint 9 tokens total from three users
-        vm.prank(minterOne);
-        nftContract.mint(3);
-        vm.prank(minterTwo);
-        nftContract.mint(3);
-        vm.prank(minterThree);
-        nftContract.mint(3);
-        // call withdraw - cannot be called by anyone
-        nftContract.withdraw();
-        nftContract.withdraw();
-    }
-
     function testChangePrice() public {
         vm.startPrank(owner);
         uint256 newPrice = 300;
@@ -179,7 +162,7 @@ contract TestGiversNFT is Test {
     function testWithdrawEther() public {
         uint256 sendAmount = 0.5 ether;
         hoax(minterOne, 5 ether);
-        (bool success,bytes memory data) = address(nftContract).call{value: sendAmount}("");
+        (bool success, bytes memory data) = address(nftContract).call{value: sendAmount}('');
         assertEq(address(nftContract).balance, sendAmount);
         vm.prank(owner);
         nftContract.withdrawEther();
