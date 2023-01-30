@@ -11,4 +11,11 @@ remappings = [
 line_length = 120
 quote_style = 'single'
 
+[rpc_endpoints]
+goerli = "${GOERLI_RPC_URL}"
+
+[etherscan]
+goerli = { key = "${ETHERSCAN_API_KEY}" }
+
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
