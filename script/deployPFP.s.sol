@@ -13,7 +13,7 @@ contract deployPFP is Script {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         vm.startBroadcast(deployerPrivateKey);
         string memory name = 'Givers Test Collection';
-        string memory symbol = 'GIVR';
+        string memory symbol = 'GIVRT';
         string memory notRevealedURI = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
         address paymentToken = 0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60;
         uint256 price = 50000000000000000000;
