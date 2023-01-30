@@ -38,7 +38,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     string private baseURI;
     string private baseExtension = '.json';
     uint256 public price;
-    uint256 public maxSupply = 1000;
+    uint256 public maxSupply;
     string public notRevealedUri;
     mapping(address => bool) public allowList;
     IERC20 public paymentToken;
@@ -50,12 +50,14 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
         string memory name_,
         string memory symbol_,
         string memory notRevealedUri_,
+        uint256 maxSupply_,
         IERC20 paymentToken_,
         uint256 price_
     ) ERC721(name_, symbol_) {
         notRevealedUri = notRevealedUri_;
         paymentToken = paymentToken_;
         price = price_;
+        maxSupply = maxSupply_;
     }
 
     /// @notice the ipfs CID hash of where the nft metadata is stored
