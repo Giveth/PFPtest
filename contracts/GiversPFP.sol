@@ -34,6 +34,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     event UpdatedPaymentToken(address indexed oldPaymentToken, address indexed newPaymentToken);
     event UpdatedMaxMint(uint8 newMaxMint);
     event UpdatedMaxSupply(uint256 newMaxSupply);
+    event AllowListEnabled(bool allowList);
 
     string private baseURI;
     string private baseExtension = '.json';
@@ -70,15 +71,15 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param mintAmount_ the amount of NFTs you wish to mint, cannot exceed the maxMintAmount variable
     function mint(uint256 mintAmount_) external whenNotPaused {
         uint256 supply = totalSupply();
-        if (mintAmount_ == 0) {
-            revert ZeroMintAmount();
-        }
-        if (mintAmount_ > maxMintAmount) {
-            revert ExceedMaxMintAmount(maxMintAmount);
-        }
-        if (supply + mintAmount_ > maxSupply) {
-            revert ExceedTotalSupplyLimit(maxSupply);
-        }
+          if (mintAmount_ == 0) {
+              revert ZeroMintAmount();
+          }
+          if (mintAmount_ > maxMintAmount) {
+              revert ExceedMaxMintAmount(maxMintAmount);
+          }
+          if (supply + mintAmount_ > maxSupply) {
+              revert ExceedTotalSupplyLimit(maxSupply);
+          }
 
         if (msg.sender != owner()) {
             if (allowListOnly && !allowList[msg.sender]) {
@@ -87,8 +88,11 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
             paymentToken.safeTransferFrom(msg.sender, address(this), price * mintAmount_);
         }
 
-        for (uint256 i = 1; i <= mintAmount_; i++) {
+        for (uint256 i = 1; i <= mintAmount_;) {
             _safeMint(msg.sender, supply + i);
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -96,6 +100,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param allowListOnly_ controls to set the allow list on (true) or off (false)
     function setAllowListOnly(bool allowListOnly_) external onlyOwner {
         allowListOnly = allowListOnly_;
+        emit AllowListEnabled(allowListOnly);
     }
 
     /// @notice internal function to add a given address to the allow list, allowing it to call mint when allow list is on
