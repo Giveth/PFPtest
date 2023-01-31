@@ -17,8 +17,9 @@ contract deployPFP is Script {
         string memory notRevealedURI = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
         address paymentToken = 0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60;
         uint256 price = 50000000000000000000;
+        uint256 maxSupply = 300;
 
-        GiversPFP nftContract = new GiversPFP(name, symbol, notRevealedURI,IERC20(paymentToken),price);
+        GiversPFP nftContract = new GiversPFP(name, symbol, notRevealedURI, maxSupply, IERC20(paymentToken),price);
 
         console.log('the address of the contract is', address(nftContract));
     }
