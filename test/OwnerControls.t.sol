@@ -25,7 +25,7 @@ contract TestGiversNFT is Test {
     string _name = 'testPFP';
     string _symbol = 'TEST';
     uint256 _price = 500;
-    uint256 _maxSupply = 300;
+    uint256 _maxSupply = 1000;
 
     GiversPFP public nftContract;
     ERC20Mintable public paymentTokenContract;
