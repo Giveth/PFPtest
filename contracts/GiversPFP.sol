@@ -71,15 +71,15 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @param mintAmount_ the amount of NFTs you wish to mint, cannot exceed the maxMintAmount variable
     function mint(uint256 mintAmount_) external whenNotPaused {
         uint256 supply = totalSupply();
-          if (mintAmount_ == 0) {
-              revert ZeroMintAmount();
-          }
-          if (mintAmount_ > maxMintAmount) {
-              revert ExceedMaxMintAmount(maxMintAmount);
-          }
-          if (supply + mintAmount_ > maxSupply) {
-              revert ExceedTotalSupplyLimit(maxSupply);
-          }
+        if (mintAmount_ == 0) {
+            revert ZeroMintAmount();
+        }
+        if (mintAmount_ > maxMintAmount) {
+            revert ExceedMaxMintAmount(maxMintAmount);
+        }
+        if (supply + mintAmount_ > maxSupply) {
+            revert ExceedTotalSupplyLimit(maxSupply);
+        }
 
         if (msg.sender != owner()) {
             if (allowListOnly && !allowList[msg.sender]) {
