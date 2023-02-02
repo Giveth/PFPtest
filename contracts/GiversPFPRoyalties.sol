@@ -276,12 +276,12 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
 
     function _beforeTokenTransfer(address from, address to, uint256 firstTokenId, uint256 batchSize)
         internal
-        override(ERC721Enumerable, ERC721)
+        override (ERC721Enumerable, ERC721)
     {
         super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
 
-    function _burn(uint256 tokenId) internal virtual override(ERC721, ERC721Royalty) {
+    function _burn(uint256 tokenId) internal virtual override (ERC721, ERC721Royalty) {
         super._burn(tokenId);
     }
 
@@ -289,7 +289,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
         public
         view
         virtual
-        override(ERC721Enumerable, ERC721Royalty)
+        override (ERC721Enumerable, ERC721Royalty)
         returns (bool)
     {
         return interfaceId == type(IERC721Enumerable).interfaceId || super.supportsInterface(interfaceId);
