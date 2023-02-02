@@ -5,11 +5,12 @@ import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol';
 
 /// @title Givers PFP Collection by Giveth minter contract
 /// @notice modified from Hashlips NFT art engine contracts - https://github.com/HashLips/hashlips_nft_contract
 /// @notice This contract contains features for an allow list, art reveal/metadata management and payment for NFTs with ERC20 tokens
-contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
+contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
     using SafeERC20 for IERC20;
     using Strings for uint256;
 
@@ -64,6 +65,22 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
     /// @notice the ipfs CID hash of where the nft metadata is stored
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
+    }
+
+    function setRoyaltyDefault(address receiver, uint96 feeNumerator) external onlyOwner {
+        _setDefaultRoyalty(receiver, feeNumerator);
+    }
+
+    function setTokenRoyalty(uint256 tokenId, address receiver, uint96 feeNumerator) external onlyOwner {
+        _setTokenRoyalty(tokenId, receiver, feeNumerator);
+    }
+
+    function resetTokenRoyalty(uint256 tokenId) external onlyOwner {
+        _resetTokenRoyalty(tokenId);
+    }
+
+    function deleteDefaultRoyalty() external onlyOwner {
+        _deleteDefaultRoyalty();
     }
 
     /// @notice This function will mint multiple NFT tokens to an address
@@ -256,4 +273,25 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable {
 
     // Fallback function is called when msg.data is not empty
     fallback() external payable {}
+
+    function _beforeTokenTransfer(address from, address to, uint256 firstTokenId, uint256 batchSize)
+        internal
+        override(ERC721Enumerable, ERC721)
+    {
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
+    }
+
+    function _burn(uint256 tokenId) internal virtual override(ERC721, ERC721Royalty) {
+        super._burn(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721Enumerable, ERC721Royalty)
+        returns (bool)
+    {
+        return interfaceId == type(IERC721Enumerable).interfaceId || super.supportsInterface(interfaceId);
+    }
 }
