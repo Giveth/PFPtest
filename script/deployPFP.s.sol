@@ -12,7 +12,6 @@ contract deployPFP is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         vm.startBroadcast(deployerPrivateKey);
-        vm.deal(0x06263e1A856B36e073ba7a50D240123411501611, 10 ether);
         string memory name = 'Givers Test Collection';
         string memory symbol = 'GIVRT';
         string memory notRevealedURI = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
