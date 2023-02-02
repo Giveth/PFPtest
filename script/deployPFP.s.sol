@@ -9,9 +9,10 @@ import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 contract deployPFP is Script {
     using SafeERC20 for IERC20;
 
-    function deploy() external {
+    function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         vm.startBroadcast(deployerPrivateKey);
+        vm.deal(0x06263e1A856B36e073ba7a50D240123411501611, 10 ether);
         string memory name = 'Givers Test Collection';
         string memory symbol = 'GIVRT';
         string memory notRevealedURI = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
@@ -22,5 +23,7 @@ contract deployPFP is Script {
         GiversPFP nftContract = new GiversPFP(name, symbol, notRevealedURI, maxSupply, IERC20(paymentToken),price);
 
         console.log('the address of the contract is', address(nftContract));
+        console.log('the owner is ', nftContract.owner());
+        console.log('the owner has ETH balance of ', nftContract.owner().balance);
     }
 }
