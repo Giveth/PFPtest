@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
+import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol';
 
 /// @title Givers PFP Collection by Giveth minter contract
 /// @notice modified from Hashlips NFT art engine contracts - https://github.com/HashLips/hashlips_nft_contract
@@ -71,11 +71,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
         _setDefaultRoyalty(receiver, feeNumerator);
     }
 
-    function setTokenRoyalty(
-        uint256 tokenId,
-        address receiver,
-        uint96 feeNumerator
-    ) external onlyOwner{
+    function setTokenRoyalty(uint256 tokenId, address receiver, uint96 feeNumerator) external onlyOwner {
         _setTokenRoyalty(tokenId, receiver, feeNumerator);
     }
 
@@ -278,26 +274,24 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
     // Fallback function is called when msg.data is not empty
     fallback() external payable {}
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 firstTokenId,
-        uint256 batchSize
-    ) internal override(ERC721Enumerable, ERC721) {
-        super._beforeTokenTransfer(
-         from,
-         to,
-         firstTokenId,
-         batchSize
-    );
+    function _beforeTokenTransfer(address from, address to, uint256 firstTokenId, uint256 batchSize)
+        internal
+        override(ERC721Enumerable, ERC721)
+    {
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
+
     function _burn(uint256 tokenId) internal virtual override(ERC721, ERC721Royalty) {
         super._burn(tokenId);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Enumerable,ERC721Royalty) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721Enumerable, ERC721Royalty)
+        returns (bool)
+    {
         return interfaceId == type(IERC721Enumerable).interfaceId || super.supportsInterface(interfaceId);
     }
-    
-
 }
