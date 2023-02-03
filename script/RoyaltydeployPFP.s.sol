@@ -21,11 +21,13 @@ contract deployPFPRoyalties is Script {
         uint16 maxMintAmount = 100;
 
         //param mint initial supply for Giveth
+        // I think this is the best launch plan - mint 10 for Giveth at the start then use mintTo to issue PFPs piecemeal during our promotional events
+        // ETH Denver, myNFT etc... after 10 we still have another 90 earmarked outside the public mint for a later time.
         address exampleGivethDAO = address(2);
 
         GiversPFP nftContract =
             new GiversPFP(name, symbol, notRevealedURI, maxSupply, IERC20(paymentToken),price, maxMintAmount);
-        nftContract.mintTo(100, exampleGivethDAO);
+        nftContract.mintTo(10, exampleGivethDAO);
         nftContract.setRoyaltyDefault(exampleGivethDAO, 1000);
 
         console.log('the address of the contract is', address(nftContract));
