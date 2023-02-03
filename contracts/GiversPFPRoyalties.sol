@@ -33,7 +33,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
     event RevealArt();
     event UpdatedPrice(uint256 oldPrice, uint256 newPrice);
     event UpdatedPaymentToken(address indexed oldPaymentToken, address indexed newPaymentToken);
-    event UpdatedMaxMint(uint8 newMaxMint);
+    event UpdatedMaxMint(uint16 newMaxMint);
     event UpdatedMaxSupply(uint256 newMaxSupply);
     event AllowListEnabled(bool allowList);
 
@@ -44,7 +44,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
     string public notRevealedUri;
     mapping(address => bool) public allowList;
     IERC20 public paymentToken;
-    uint8 public maxMintAmount = 5;
+    uint16 public maxMintAmount;
     bool public revealed = false;
     bool public allowListOnly = true;
 
@@ -54,12 +54,14 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
         string memory notRevealedUri_,
         uint256 maxSupply_,
         IERC20 paymentToken_,
-        uint256 price_
+        uint256 price_,
+        uint16 maxMintAmount_
     ) ERC721(name_, symbol_) {
         notRevealedUri = notRevealedUri_;
         paymentToken = paymentToken_;
         price = price_;
         maxSupply = maxSupply_;
+        maxMintAmount = maxMintAmount_;
     }
 
     /// @notice the ipfs CID hash of where the nft metadata is stored
@@ -107,6 +109,26 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
 
         for (uint256 i = 1; i <= mintAmount_;) {
             _safeMint(msg.sender, supply + i);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function mintTo(uint256 mintAmount_, address recipient) external whenNotPaused onlyOwner {
+        uint256 supply = totalSupply();
+        if (mintAmount_ == 0) {
+            revert ZeroMintAmount();
+        }
+        if (mintAmount_ > maxMintAmount) {
+            revert ExceedMaxMintAmount(maxMintAmount);
+        }
+        if (supply + mintAmount_ > maxSupply) {
+            revert ExceedTotalSupplyLimit(maxSupply);
+        }
+
+        for (uint256 i = 1; i <= mintAmount_;) {
+            _safeMint(recipient, supply + i);
             unchecked {
                 i++;
             }
@@ -219,7 +241,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
 
     /// @notice change the maximum amount of NFTs of this collection that can be minted in on tx with mint()
     /// @param maxMintAmount_ the new maximum of NFTs that can be minted in one tx (max 256)
-    function setMaxMintAmount(uint8 maxMintAmount_) external onlyOwner {
+    function setMaxMintAmount(uint16 maxMintAmount_) external onlyOwner {
         maxMintAmount = maxMintAmount_;
         emit UpdatedMaxMint(maxMintAmount);
     }
