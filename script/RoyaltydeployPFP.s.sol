@@ -23,7 +23,8 @@ contract deployPFPRoyalties is Script {
         //param mint initial supply for Giveth
         address exampleGivethDAO = address(2);
 
-        GiversPFP nftContract = new GiversPFP(name, symbol, notRevealedURI, maxSupply, IERC20(paymentToken),price, maxMintAmount);
+        GiversPFP nftContract =
+            new GiversPFP(name, symbol, notRevealedURI, maxSupply, IERC20(paymentToken),price, maxMintAmount);
         nftContract.mintTo(100, exampleGivethDAO);
         nftContract.setRoyaltyDefault(exampleGivethDAO, 1000);
 

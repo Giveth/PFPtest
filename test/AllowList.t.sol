@@ -30,7 +30,6 @@ contract TestGiversNFT is Test {
     ERC20Mintable public paymentTokenContract;
     uint16 maxMintAmount = 5;
 
-
     address internal owner = address(1);
     address internal minterOne = address(2);
     address internal minterTwo = address(3);
@@ -43,7 +42,8 @@ contract TestGiversNFT is Test {
     function setUp() public {
         vm.startPrank(owner);
         paymentTokenContract = new ERC20Mintable("mitch token", "MITCH");
-        nftContract = new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price, maxMintAmount);
+        nftContract =
+            new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price, maxMintAmount);
         paymentTokenContract.mint(minterOne, 100000);
         paymentTokenContract.mint(minterTwo, 100000);
         paymentTokenContract.mint(minterThree, 100000);
