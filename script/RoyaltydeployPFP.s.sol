@@ -18,8 +18,14 @@ contract deployPFPRoyalties is Script {
         address paymentToken = 0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60;
         uint256 price = 50 ether;
         uint256 maxSupply = 300;
+        uint16 maxMintAmount = 100;
 
-        GiversPFP nftContract = new GiversPFP(name, symbol, notRevealedURI, maxSupply, IERC20(paymentToken),price);
+        //param mint initial supply for Giveth
+        address exampleGivethDAO = address(2);
+
+        GiversPFP nftContract = new GiversPFP(name, symbol, notRevealedURI, maxSupply, IERC20(paymentToken),price, maxMintAmount);
+        nftContract.mintTo(100, exampleGivethDAO);
+        nftContract.setRoyaltyDefault(exampleGivethDAO, 1000);
 
         console.log('the address of the contract is', address(nftContract));
         console.log('the owner is ', nftContract.owner());

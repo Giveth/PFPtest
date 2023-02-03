@@ -10,6 +10,7 @@ contract deployPFP is Script {
     using SafeERC20 for IERC20;
 
     function run() external {
+        // set constructor params
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         vm.startBroadcast(deployerPrivateKey);
         string memory name = 'Givers Test Collection';
@@ -18,9 +19,9 @@ contract deployPFP is Script {
         address paymentToken = 0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60;
         uint256 price = 50 ether;
         uint256 maxSupply = 300;
+        uint16 maxMintAmount = 100;
 
-        GiversPFP nftContract = new GiversPFP(name, symbol, notRevealedURI, maxSupply, IERC20(paymentToken),price);
-
+        GiversPFP nftContract = new GiversPFP(name, symbol, notRevealedURI, maxSupply, IERC20(paymentToken),price, maxMintAmount);
         console.log('the address of the contract is', address(nftContract));
         console.log('the owner is ', nftContract.owner());
         console.log('the owner has ETH balance of ', nftContract.owner().balance);
