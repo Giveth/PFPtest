@@ -26,6 +26,8 @@ contract TestGiversNFT is Test {
     string _symbol = 'TEST';
     uint256 _price = 500;
     uint256 _maxSupply = 300;
+    uint16 maxMintAmount = 5;
+
 
     GiversPFP public nftContract;
     ERC20Mintable public paymentTokenContract;
@@ -40,7 +42,7 @@ contract TestGiversNFT is Test {
     function setUp() public {
         vm.startPrank(owner);
         paymentTokenContract = new ERC20Mintable("mitch token", "MITCH");
-        nftContract = new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price);
+        nftContract = new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price, maxMintAmount);
         paymentTokenContract.mint(minterOne, 100000);
         nftContract.setAllowListOnly(false);
         vm.stopPrank();
