@@ -172,4 +172,17 @@ contract TestGiversNFT is Test {
         nftContract.withdrawEther();
         assertEq(address(owner).balance, sendAmount);
     }
+
+    function testMintTo() public {
+        vm.prank(owner);
+        nftContract.mintTo(1, minterOne);
+        uint256 balanceOne = nftContract.balanceOf(minterOne);
+        assertEq(balanceOne, 1);
+    }
+
+    function testNotOwnerMintTo() public {
+        vm.prank(minterOne);
+        vm.expectRevert('Ownable: caller is not the owner');
+        nftContract.mintTo(1, minterTwo);
+    }
 }
