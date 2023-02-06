@@ -115,6 +115,10 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
         }
     }
 
+    ///@notice allows the owner to mint NFTs for free to a specified address - the purpose of this function is for the owner to be able to gift NFTs for promotional purposes
+    ///@param mintAmount_ the amount of NFTs to mint in a single transaction
+    ///@param recipient the recipient of the minted NFT(s)
+    ///
     function mintTo(uint256 mintAmount_, address recipient) external whenNotPaused onlyOwner {
         uint256 supply = totalSupply();
         if (mintAmount_ == 0) {
