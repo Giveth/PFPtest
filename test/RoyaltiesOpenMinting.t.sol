@@ -72,6 +72,16 @@ contract TestGiversNFT is Test {
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), _price * 4);
     }
 
+    function testMintOverMaxBalance() public {
+        vm.startPrank(minterThree);
+        nftContract.mint(3);
+        console.log(nftContract.balanceOf(minterThree));
+        vm.expectRevert(abi.encodeWithSelector(GiversPFP.ExceedMaxBalance.selector, maxMintAmount));
+        nftContract.mint(3);
+        console.log(nftContract.balanceOf(minterThree));
+        vm.stopPrank();
+    }
+
     function testFailOpenMint() public {
         // minter four has no payment tokens
         vm.startPrank(minterFour);

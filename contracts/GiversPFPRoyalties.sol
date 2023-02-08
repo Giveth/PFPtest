@@ -24,6 +24,8 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
     error ExceedMaxMintAmount(uint256 maxMintAmount);
     /// Cannot exceed total `maxSupply` supply of tokens
     error ExceedTotalSupplyLimit(uint256 maxSupply);
+    /// cannot have more than max balance in address
+    error ExceedMaxBalance(uint96 maxBalance);
 
     event Withdrawn(address indexed account, uint256 amount);
     event ChangedURI(string oldURI, string newURI);
@@ -90,6 +92,11 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
     /// @param mintAmount_ the amount of NFTs you wish to mint, cannot exceed the maxMintAmount variable
     function mint(uint256 mintAmount_) external whenNotPaused {
         uint256 supply = totalSupply();
+        uint256 recipientBalance = balanceOf(msg.sender);
+
+        if (recipientBalance + mintAmount_ > maxMintAmount) {
+            revert ExceedMaxBalance(maxMintAmount);
+        }
         if (mintAmount_ == 0) {
             revert ZeroMintAmount();
         }
@@ -121,6 +128,12 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
     ///
     function mintTo(uint256 mintAmount_, address recipient) external whenNotPaused onlyOwner {
         uint256 supply = totalSupply();
+        uint256 recipientBalance = balanceOf(recipient);
+
+        if (recipientBalance + mintAmount_ > maxMintAmount) {
+            revert ExceedMaxBalance(maxMintAmount);
+        }
+
         if (mintAmount_ == 0) {
             revert ZeroMintAmount();
         }
@@ -130,7 +143,6 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
         if (supply + mintAmount_ > maxSupply) {
             revert ExceedTotalSupplyLimit(maxSupply);
         }
-
         for (uint256 i = 1; i <= mintAmount_;) {
             _safeMint(recipient, supply + i);
             unchecked {
@@ -252,7 +264,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
 
     /// @notice change the maximum supply of the NFT collection - used to extend the collection if there is more art available
     /// @param maxSupply_ the new max supply of the nft collection
-    function setMaxSupply(uint256 maxSupply_) external onlyOwner {
+    function setMaxSupply(uint96 maxSupply_) external onlyOwner {
         maxSupply = maxSupply_;
         emit UpdatedMaxSupply(maxSupply_);
     }
