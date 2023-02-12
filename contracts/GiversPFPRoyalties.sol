@@ -88,52 +88,34 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
     }
 
     /// @notice This function will mint multiple NFT tokens to an address
-    /// @notice charges a final price calculcated by the # of NFTs to mint * the base price per NFT
+    /// @notice charges a final price calculated by the # of NFTs to mint * the base price per NFT
     /// @param mintAmount_ the amount of NFTs you wish to mint, cannot exceed the maxMintAmount variable
     function mint(uint256 mintAmount_) external whenNotPaused {
-        uint256 supply = totalSupply();
-        uint256 recipientBalance = balanceOf(msg.sender);
+        if (allowListOnly && !allowList[msg.sender]) {
+            revert NotInAllowList(msg.sender);
+        }
+        paymentToken.safeTransferFrom(msg.sender, address(this), price * mintAmount_);
 
-        if (recipientBalance + mintAmount_ > maxMintAmount) {
-            revert ExceedMaxBalance(maxMintAmount);
-        }
-        if (mintAmount_ == 0) {
-            revert ZeroMintAmount();
-        }
-        if (mintAmount_ > maxMintAmount) {
-            revert ExceedMaxMintAmount(maxMintAmount);
-        }
-        if (supply + mintAmount_ > maxSupply) {
-            revert ExceedTotalSupplyLimit(maxSupply);
-        }
-
-        if (msg.sender != owner()) {
-            if (allowListOnly && !allowList[msg.sender]) {
-                revert NotInAllowList(msg.sender);
-            }
-            paymentToken.safeTransferFrom(msg.sender, address(this), price * mintAmount_);
-        }
-
-        for (uint256 i = 1; i <= mintAmount_;) {
-            _safeMint(msg.sender, supply + i);
-            unchecked {
-                i++;
-            }
-        }
+        _safeMintMany(mintAmount_, msg.sender);
     }
 
-    ///@notice allows the owner to mint NFTs for free to a specified address - the purpose of this function is for the owner to be able to gift NFTs for promotional purposes
-    ///@param mintAmount_ the amount of NFTs to mint in a single transaction
-    ///@param recipient the recipient of the minted NFT(s)
-    ///
+    /// @notice allows the owner to mint NFTs for free to a specified address - the purpose of this function is for the owner to be able to gift NFTs for promotional purposes
+    /// @param mintAmount_ the amount of NFTs to mint in a single transaction
+    /// @param recipient the recipient of the minted NFT(s)
     function mintTo(uint256 mintAmount_, address recipient) external whenNotPaused onlyOwner {
+        _safeMintMany(mintAmount_, recipient);
+    }
+
+    /// @notice internal function to safely mint many NFTs
+    /// @param mintAmount_ the amount of NFTs to mint in a single transaction
+    /// @param recipient the recipient of the minted NFT(s)
+    function _safeMintMany(uint256 mintAmount_, address recipient) internal {
         uint256 supply = totalSupply();
         uint256 recipientBalance = balanceOf(recipient);
 
         if (recipientBalance + mintAmount_ > maxMintAmount) {
             revert ExceedMaxBalance(maxMintAmount);
         }
-
         if (mintAmount_ == 0) {
             revert ZeroMintAmount();
         }
@@ -143,6 +125,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
         if (supply + mintAmount_ > maxSupply) {
             revert ExceedTotalSupplyLimit(maxSupply);
         }
+
         for (uint256 i = 1; i <= mintAmount_;) {
             _safeMint(recipient, supply + i);
             unchecked {
@@ -302,7 +285,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
 
     ///@notice allows the owner to withdraw ether from this contract - we don't expect this contract to hold ether, but just in case...
     function withdrawEther() external payable onlyOwner {
-        (bool sent, bytes memory data) = payable(owner()).call{value: address(this).balance}('');
+        (bool sent,) = payable(owner()).call{value: address(this).balance}('');
         require(sent, 'Failed to send Ether');
     }
 
@@ -314,12 +297,12 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
 
     function _beforeTokenTransfer(address from, address to, uint256 firstTokenId, uint256 batchSize)
         internal
-        override (ERC721Enumerable, ERC721)
+        override(ERC721Enumerable, ERC721)
     {
         super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
 
-    function _burn(uint256 tokenId) internal virtual override (ERC721, ERC721Royalty) {
+    function _burn(uint256 tokenId) internal virtual override(ERC721, ERC721Royalty) {
         super._burn(tokenId);
     }
 
@@ -327,7 +310,7 @@ contract GiversPFP is ERC721Enumerable, Ownable, Pausable, ERC721Royalty {
         public
         view
         virtual
-        override (ERC721Enumerable, ERC721Royalty)
+        override(ERC721Enumerable, ERC721Royalty)
         returns (bool)
     {
         return interfaceId == type(IERC721Enumerable).interfaceId || super.supportsInterface(interfaceId);
