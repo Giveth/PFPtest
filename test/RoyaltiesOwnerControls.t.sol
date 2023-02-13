@@ -19,7 +19,7 @@ contract ERC20Mintable is ERC20, Ownable {
     }
 }
 
-contract TestGiversNFT is Test {
+contract TestRoyaltiesOwnerControls is Test {
     string _initBaseURI = 'ipfs://QmTSadPfscgJMjti4SEaqiLuZ4rVg1wckrRSdo8hqG9M4U/';
     string _initNotRevealedUri = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
     string _name = 'testPFP';
@@ -51,6 +51,7 @@ contract TestGiversNFT is Test {
         paymentTokenContract.mint(minterOne, 100000);
         paymentTokenContract.mint(minterTwo, 100000);
         paymentTokenContract.mint(minterThree, 100000);
+        paymentTokenContract.mint(minterFour, 100000);
         nftContract.setBaseURI(_initBaseURI);
         vm.stopPrank();
         vm.prank(minterOne);
@@ -58,6 +59,8 @@ contract TestGiversNFT is Test {
         vm.prank(minterTwo);
         paymentTokenContract.approve(address(nftContract), 5000);
         vm.prank(minterThree);
+        paymentTokenContract.approve(address(nftContract), 5000);
+        vm.prank(minterFour);
         paymentTokenContract.approve(address(nftContract), 5000);
     }
 
@@ -136,8 +139,6 @@ contract TestGiversNFT is Test {
         emit UpdatedMaxMint(255);
         nftContract.setMaxMintAmount(255);
         nftContract.setPrice(5);
-        // mint tokens for minter four
-        paymentTokenContract.mint(minterFour, 5000);
         vm.stopPrank();
         // attempt to mint 1040 nfts when max supply is 1000
         vm.prank(minterOne);
@@ -156,7 +157,6 @@ contract TestGiversNFT is Test {
         nftContract.setMaxSupply(1290);
         vm.startPrank(minterFour);
         //attempt to mint past old max supply
-        paymentTokenContract.approve(address(nftContract), 5000);
         nftContract.mint(255);
         // verify new total supply is past old max supply
         assertEq(nftContract.totalSupply(), 1020);
@@ -166,7 +166,8 @@ contract TestGiversNFT is Test {
     function testWithdrawEther() public {
         uint256 sendAmount = 0.5 ether;
         hoax(minterOne, 5 ether);
-        (bool success, bytes memory data) = address(nftContract).call{value: sendAmount}('');
+        (bool success,) = address(nftContract).call{value: sendAmount}('');
+        assertTrue(success);
         assertEq(address(nftContract).balance, sendAmount);
         vm.prank(owner);
         nftContract.withdrawEther();

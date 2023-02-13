@@ -19,7 +19,7 @@ contract ERC20Mintable is ERC20, Ownable {
     }
 }
 
-contract TestGiversNFT is Test {
+contract TestRoyaltiesAllowList is Test {
     string _initBaseURI = 'ipfs://QmTSadPfscgJMjti4SEaqiLuZ4rVg1wckrRSdo8hqG9M4U/';
     string _initNotRevealedUri = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
     string _name = 'testPFP';
@@ -66,8 +66,6 @@ contract TestGiversNFT is Test {
 
     function testAllowListMint() public {
         vm.startPrank(owner);
-        // test minting 1 token from owner - should not cost tokens
-        nftContract.mint(1);
 
         // allow minter one to mint tokens
         vm.expectEmit(true, true, true, true, address(nftContract));
