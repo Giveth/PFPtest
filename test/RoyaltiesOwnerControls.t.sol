@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import 'forge-std/Test.sol';
 import 'ds-test/test.sol';
-import '../contracts/GiversPFP.sol';
+import '../contracts/GiversPFPRoyalties.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract ERC20Mintable is ERC20, Ownable {
@@ -19,13 +19,14 @@ contract ERC20Mintable is ERC20, Ownable {
     }
 }
 
-contract TestGiversNFT is Test {
+contract TestRoyaltiesOwnerControls is Test {
     string _initBaseURI = 'ipfs://QmTSadPfscgJMjti4SEaqiLuZ4rVg1wckrRSdo8hqG9M4U/';
     string _initNotRevealedUri = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
     string _name = 'testPFP';
     string _symbol = 'TEST';
     uint256 _price = 500;
     uint256 _maxSupply = 1000;
+    uint16 maxMintAmount = 5;
 
     GiversPFP public nftContract;
     ERC20Mintable public paymentTokenContract;
@@ -39,16 +40,18 @@ contract TestGiversNFT is Test {
     event Withdrawn(address indexed account, uint256 amount);
     event UpdatedPrice(uint256 oldPrice, uint256 newPrice);
     event UpdatedPaymentToken(address indexed oldPaymentToken, address indexed newPaymentToken);
-    event UpdatedMaxMint(uint8 newMaxMint);
+    event UpdatedMaxMint(uint16 newMaxMint);
     event UpdatedMaxSupply(uint256 newMaxSupply);
 
     function setUp() public {
         vm.startPrank(owner);
         paymentTokenContract = new ERC20Mintable("mitch token", "MITCH");
-        nftContract = new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price);
+        nftContract =
+            new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price, maxMintAmount);
         paymentTokenContract.mint(minterOne, 100000);
         paymentTokenContract.mint(minterTwo, 100000);
         paymentTokenContract.mint(minterThree, 100000);
+        paymentTokenContract.mint(minterFour, 100000);
         nftContract.setBaseURI(_initBaseURI);
         vm.stopPrank();
         vm.prank(minterOne);
@@ -56,6 +59,8 @@ contract TestGiversNFT is Test {
         vm.prank(minterTwo);
         paymentTokenContract.approve(address(nftContract), 5000);
         vm.prank(minterThree);
+        paymentTokenContract.approve(address(nftContract), 5000);
+        vm.prank(minterFour);
         paymentTokenContract.approve(address(nftContract), 5000);
     }
 
@@ -134,8 +139,6 @@ contract TestGiversNFT is Test {
         emit UpdatedMaxMint(255);
         nftContract.setMaxMintAmount(255);
         nftContract.setPrice(5);
-        // mint tokens for minter four
-        paymentTokenContract.mint(minterFour, 5000);
         vm.stopPrank();
         // attempt to mint 1040 nfts when max supply is 1000
         vm.prank(minterOne);
@@ -154,7 +157,6 @@ contract TestGiversNFT is Test {
         nftContract.setMaxSupply(1290);
         vm.startPrank(minterFour);
         //attempt to mint past old max supply
-        paymentTokenContract.approve(address(nftContract), 5000);
         nftContract.mint(255);
         // verify new total supply is past old max supply
         assertEq(nftContract.totalSupply(), 1020);
@@ -164,10 +166,24 @@ contract TestGiversNFT is Test {
     function testWithdrawEther() public {
         uint256 sendAmount = 0.5 ether;
         hoax(minterOne, 5 ether);
-        (bool success, bytes memory data) = address(nftContract).call{value: sendAmount}('');
+        (bool success,) = address(nftContract).call{value: sendAmount}('');
+        assertTrue(success);
         assertEq(address(nftContract).balance, sendAmount);
         vm.prank(owner);
         nftContract.withdrawEther();
         assertEq(address(owner).balance, sendAmount);
+    }
+
+    function testMintTo() public {
+        vm.prank(owner);
+        nftContract.mintTo(1, minterOne);
+        uint256 balanceOne = nftContract.balanceOf(minterOne);
+        assertEq(balanceOne, 1);
+    }
+
+    function testNotOwnerMintTo() public {
+        vm.prank(minterOne);
+        vm.expectRevert('Ownable: caller is not the owner');
+        nftContract.mintTo(1, minterTwo);
     }
 }

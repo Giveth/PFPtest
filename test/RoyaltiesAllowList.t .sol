@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import 'forge-std/Test.sol';
 import 'ds-test/test.sol';
-import '../contracts/GiversPFP.sol';
+import '../contracts/GiversPFPRoyalties.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract ERC20Mintable is ERC20, Ownable {
@@ -19,7 +19,7 @@ contract ERC20Mintable is ERC20, Ownable {
     }
 }
 
-contract TestGiversNFT is Test {
+contract TestRoyaltiesAllowList is Test {
     string _initBaseURI = 'ipfs://QmTSadPfscgJMjti4SEaqiLuZ4rVg1wckrRSdo8hqG9M4U/';
     string _initNotRevealedUri = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
     string _name = 'testPFP';
@@ -28,6 +28,7 @@ contract TestGiversNFT is Test {
     uint256 _maxSupply = 300;
     GiversPFP public nftContract;
     ERC20Mintable public paymentTokenContract;
+    uint16 maxMintAmount = 5;
 
     address internal owner = address(1);
     address internal minterOne = address(2);
@@ -41,7 +42,8 @@ contract TestGiversNFT is Test {
     function setUp() public {
         vm.startPrank(owner);
         paymentTokenContract = new ERC20Mintable("mitch token", "MITCH");
-        nftContract = new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price);
+        nftContract =
+            new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price, maxMintAmount);
         paymentTokenContract.mint(minterOne, 100000);
         paymentTokenContract.mint(minterTwo, 100000);
         paymentTokenContract.mint(minterThree, 100000);
@@ -64,8 +66,6 @@ contract TestGiversNFT is Test {
 
     function testAllowListMint() public {
         vm.startPrank(owner);
-        // test minting 1 token from owner - should not cost tokens
-        nftContract.mint(1);
 
         // allow minter one to mint tokens
         vm.expectEmit(true, true, true, true, address(nftContract));

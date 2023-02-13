@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import 'forge-std/Test.sol';
 import 'ds-test/test.sol';
-import '../contracts/GiversPFP.sol';
+import '../contracts/GiversPFPRoyalties.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract ERC20Mintable is ERC20, Ownable {
@@ -19,13 +19,14 @@ contract ERC20Mintable is ERC20, Ownable {
     }
 }
 
-contract TestGiversNFT is Test {
+contract TestRoyaltiesOpenMinting is Test {
     string _initBaseURI = 'ipfs://QmTSadPfscgJMjti4SEaqiLuZ4rVg1wckrRSdo8hqG9M4U/';
     string _initNotRevealedUri = 'ipfs://QmfBaZYhkSnMp7W7rT4LhAphb7h9RhUpPQB8ERchndzyUr/hidden.json';
     string _name = 'testPFP';
     string _symbol = 'TEST';
     uint256 _price = 500;
     uint256 _maxSupply = 300;
+    uint16 maxMintAmount = 5;
 
     GiversPFP public nftContract;
     ERC20Mintable public paymentTokenContract;
@@ -39,7 +40,8 @@ contract TestGiversNFT is Test {
     function setUp() public {
         vm.startPrank(owner);
         paymentTokenContract = new ERC20Mintable("mitch token", "MITCH");
-        nftContract = new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price);
+        nftContract =
+            new GiversPFP(_name,  _symbol, _initNotRevealedUri, _maxSupply, paymentTokenContract, _price, maxMintAmount);
         // turn off allow list - allow open minting
         nftContract.setAllowListOnly(false);
         // mint payment tokens for test accts one, two and three
@@ -68,6 +70,16 @@ contract TestGiversNFT is Test {
         nftContract.mint(3);
         // check balance of contract after minting 4 total pfps
         assertEq(paymentTokenContract.balanceOf(address(nftContract)), _price * 4);
+    }
+
+    function testMintOverMaxBalance() public {
+        vm.startPrank(minterThree);
+        nftContract.mint(3);
+        console.log(nftContract.balanceOf(minterThree));
+        vm.expectRevert(abi.encodeWithSelector(GiversPFP.ExceedMaxBalance.selector, maxMintAmount));
+        nftContract.mint(3);
+        console.log(nftContract.balanceOf(minterThree));
+        vm.stopPrank();
     }
 
     function testFailOpenMint() public {
